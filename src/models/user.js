@@ -7,12 +7,23 @@ const userSchema = new Schema({
     unique: true,
     required: true,
   },
-  name: {
+  fullName: {
     type: String,
   },
   email: {
     type: String,
+    required: true,
+    unique: true
   },
+  password: {
+    type: String,
+  },
+  role: {
+    type: String,
+    enum: ["USER"]
+  },
+  hash: String,
+  salt: String
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);

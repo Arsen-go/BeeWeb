@@ -1,13 +1,12 @@
 const { gql } = require('apollo-server');
 
 const user = gql `
-scalar Date
+  scalar Date
   type User {
       id: String
-      name: String
+      fullName: String
       email: String
       createdAt: Date
-      birthDay: Date
   }
 `;
 

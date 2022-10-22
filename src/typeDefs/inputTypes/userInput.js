@@ -2,9 +2,9 @@ const { gql } = require('apollo-server');
 
 const userInput = gql`
   input UserInput {
-    email: String!
-    name: String!
-    birthDay: String
+    email: String! # the same as login
+    password: String!
+    fullName: String!
   }
 `;
 

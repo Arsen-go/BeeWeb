@@ -8,15 +8,52 @@ class UserValidator extends Validator {
         this.dbRepository = dbRepository;
     }
 
-    async validateCreateUser({ user }) {
+    async validateVerifyEmail(requestBody) {
         try {
             const schema = yup.object().shape({
-                name: yup.string().required().min(4).max(100),
                 email: yup.string().required().email(),
             });
-            await this.validateYupSchema(schema, { ...user });
+            await this.validateYupSchema(schema, requestBody);
         } catch (error) {
-            throw new ApolloError(error, 406);
+            throw new ApolloError(error);
+        }
+    }
+
+    async validateConfirmCode(requestBody) {
+        try {
+            const schema = yup.object().shape({
+                email: yup.string().required().email(),
+                confirmationCode: yup.string().required(),
+            });
+            await this.validateYupSchema(schema, requestBody);
+        } catch (error) {
+            throw new ApolloError(error);
+        }
+    }
+
+    async validateCreateUser(requestBody) {
+        const { user } = requestBody;
+        try {
+            const schema = yup.object().shape({
+                fullName: yup.string().required().min(4).max(100),
+                email: yup.string().required().email(),
+                password: yup.string().min(5).max(100).required() // or can be any format that needs
+            });
+            await this.validateYupSchema(schema, user);
+        } catch (error) {
+            throw new ApolloError(error);
+        }
+    }
+
+    async validateLogin(requestBody) {
+        try {
+            const schema = yup.object().shape({
+                email: yup.string().required().email(),
+                password: yup.string().min(5).max(100).required()
+            });
+            await this.validateYupSchema(schema, requestBody);
+        } catch (error) {
+            throw new ApolloError(error);
         }
     }
 

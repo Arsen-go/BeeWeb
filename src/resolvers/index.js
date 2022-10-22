@@ -1,9 +1,11 @@
-const { tableQueries, tableResolver } = require("./table");
+const { workspaceQueries, workspaceResolver } = require("./workspace");
+const { userQueries, userResolver } = require("./user");
 
 const resolvers = [
-  ...tableResolver
+  ...userResolver,
+  ...workspaceResolver,
 ];
 
 module.exports = {
-  resolvers, tableQueries
+  resolvers, userQueries, workspaceQueries
 };

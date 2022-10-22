@@ -1,4 +1,3 @@
-/* eslint-disable no-empty-pattern */
 const { authentication } = require("../../authentication");
 
 let userRepository, userValidator;
@@ -9,10 +8,9 @@ class Queries {
     }
 
     Query = {
-        users: authentication.authenticated(
-            async (_, requestBody) => {
-                await userValidator.validateGetUsers(requestBody);
-                return await userRepository.getUsers(requestBody);
+        me: authentication.roleAuthentication(["USER"], // and any other roles that app can contain
+            async (_, { }, { currentUser }) => {
+                return await userRepository.me(currentUser);
             }),
     }
 }
