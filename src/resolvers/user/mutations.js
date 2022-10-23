@@ -28,7 +28,7 @@ class Mutations {
                 await userValidator.validateLogin(requestBody);
                 return await userRepository.login(requestBody);
             },
-    }
+    };
 }
 
 module.exports = { Mutations };

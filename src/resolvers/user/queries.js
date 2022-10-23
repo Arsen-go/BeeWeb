@@ -9,10 +9,10 @@ class Queries {
 
     Query = {
         me: authentication.roleAuthentication(["USER"], // and any other roles that app can contain
-            async (_, { }, { currentUser }) => {
+            async (_, {}, { currentUser }) => {
                 return await userRepository.me(currentUser);
             }),
-    }
+    };
 }
 
 module.exports = { Queries };

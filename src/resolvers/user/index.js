@@ -1,5 +1,5 @@
 const { Queries } = require("./queries");
-const { Mutations } = require("./mutations")
+const { Mutations } = require("./mutations");
 const { gql } = require('apollo-server');
 const { userValidator } = require("../../validators");
 const { userRepository, dbRepository } = require("../../repositories");
@@ -26,6 +26,6 @@ const userQueries = gql`
         login (email: String!, password: String!): Token
     }
   
-`
+`;
 
 module.exports = { userResolver, userQueries };

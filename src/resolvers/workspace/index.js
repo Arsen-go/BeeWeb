@@ -17,7 +17,8 @@ const workspaceQueries = gql`
 
     type Mutation {
         createWorkspace (workspace: WorkspaceInput!): Workspace
+        """If user is already registered. In other case we will accept invite inside createUser"""
+        acceptWorkspaceInvite (workspaceId: String!): Workspace
     }
 `
-
 module.exports = { workspaceResolver, workspaceQueries };

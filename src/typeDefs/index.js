@@ -1,11 +1,11 @@
-const { user, token, workspace } = require('./types');
-const { userInput, workspaceInput, filterInput } = require("./inputTypes");
-const { userQueries, workspaceQueries } = require("../resolvers");
+const { user, token, workspace, conversation } = require('./types');
+const { userInput, workspaceInput, filterInput, conversationInput } = require("./inputTypes");
+const { userQueries, workspaceQueries, conversationQueries } = require("../resolvers");
 
 const typeDefs = [
-    user, token, workspace,
-    userInput, workspaceInput, filterInput,
-    userQueries, workspaceQueries
+    user, token, workspace, conversation,
+    userInput, workspaceInput, filterInput, conversationInput,
+    userQueries, workspaceQueries, conversationQueries
 ];
 
 module.exports = {

@@ -4,28 +4,34 @@ const { ApolloServer } = require('apollo-server-express');
 const { ApolloServerPluginLandingPageGraphQLPlayground } = require("apollo-server-core");
 const { typeDefs } = require('./typeDefs');
 const { resolvers } = require('./resolvers');
-const { logger } = require("./logger");
 const { authService } = require("./authentication");
+const { attachmentRepository } = require("./repositories");
 const express = require('express');
 const { createServer } = require('http');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 const depthLimit = require('graphql-depth-limit');
 const cors = require('cors');
+const multer = require("multer");
+const path = require("path");
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join('./assets'));
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9) + `${file.originalname}`;
+        cb(null, file.fieldname + '-' + uniqueSuffix);
+    }
+});
+
+const upload = multer({ storage: storage });
 
 (async function () {
     const app = express();
     const httpServer = createServer(app);
-
-    const verifyToken = async (authToken) => {
-        try {
-            if (authToken) {
-                var { currentUser } = await authService.checkToken(authToken);
-            }
-            return currentUser;
-        } catch (error) {
-            logger.warn(`Unable to authenticate using auth token: ${authToken}`);
-        }
-    }
+    // also we can do file upload with graphql. 
+    app.put('/upload/workspace/attachment', [authService.checkRestToken, upload.single('file')], attachmentRepository.uploadWorkspaceAttachment);
+    app.put('/upload/conversation/attachment', [authService.checkRestToken, upload.single('file')], attachmentRepository.uploadConversationAttachment);
 
     const schema = makeExecutableSchema({
         typeDefs,
@@ -36,7 +42,7 @@ const cors = require('cors');
         schema,
         validationRules: [depthLimit(3)],
         context: async ({ req }) => {
-            const currentUser = await verifyToken(req ? req.headers.authentication : null);
+            const currentUser = authService.verifyToken(req ? req.headers.authentication : null);
 
             return {
                 currentUser,

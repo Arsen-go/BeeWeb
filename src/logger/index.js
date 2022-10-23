@@ -11,14 +11,14 @@ const logFormat = winston.format.combine(
 );
 
 const transport = new (winston.transports.DailyRotateFile)({
-  filename: 'logs/tryLocalLogger-%DATE%.log',
+  filename: 'logs/beeWebLogger-%DATE%.log',
   datePattern: 'YYYY-MM-DD-HH',
   zippedArchive: true,
   maxSize: '2d',
   maxFiles: '14d',
 });
 
-winston.loggers.add('tryLocalLogger', {
+winston.loggers.add('beeWebLogger', {
   format: logFormat,
   transports: [
     transport,
@@ -28,6 +28,6 @@ winston.loggers.add('tryLocalLogger', {
   ],
 });
 
-const logger = winston.loggers.get('tryLocalLogger');
+const logger = winston.loggers.get('beeWebLogger');
 
 module.exports = { logger };

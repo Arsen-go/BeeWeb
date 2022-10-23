@@ -7,16 +7,13 @@ const AttachmentSchema = new Schema({
     unique: true,
     required: true
   },
-  fileId: {
-    type: String,
-    required: true
-  },
   contentType: {
     type: String,
-    required: true
   },
-  key: {
+  attachmentType: {
     type: String,
+    enum: ["PROFILE", "WORKSPACE", "CONVERSATION", "LOGO"]
+    // and any other type that application can have
   },
   owner: { type: Schema.Types.ObjectId, ref: "User" },
 }, { timestamps: true });

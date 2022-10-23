@@ -1,15 +1,19 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const emailTokenSchema = new Schema({
-    from: {
-        type: String,
-    },
+const InviteSchema = new Schema({
+    from: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     to: {
         type: String,
+        require: true
     },
-    // type
+    inviteType: {
+        type: String,
+        enum: ["WORKSPACE", "CONVERSATION"]
+    },
+    workspace: { type: Schema.Types.ObjectId, ref: 'Workspace' },
+    conversation: { type: Schema.Types.ObjectId, ref: 'Conversation' },
 }, { timestamps: true });
 
-const EmailToken = mongoose.model("EmailToken", emailTokenSchema);
-module.exports = { EmailToken };
+const Invite = mongoose.model("Invite", InviteSchema);
+module.exports = { Invite };

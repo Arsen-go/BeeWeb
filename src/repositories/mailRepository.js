@@ -3,7 +3,6 @@ const { logger } = require("../logger");
 const nodemailer = require('nodemailer');
 const { ApolloError } = require("apollo-server-express");
 const { translate } = require("../locales");
-const { db } = require("../database/mongodb");
 
 class MailRepository {
     constructor(dbRepository) {
@@ -12,13 +11,13 @@ class MailRepository {
             service: "gmail",
             auth: {
                 type: "OAuth2",
-                user: "@gmail.com",
+                user: process.env.MAIL_ADDRESS,
                 clientId: process.env.MAILER_CLIENT_ID,
                 clientSecret: process.env.MAILER_CLIENT_SECRET,
                 refreshToken: process.env.MAILER_REFRESH_TOKEN,
                 accessToken: process.env.MAILER_ACCESS_TOKEN,
             }
-        })
+        });
 
         this.transactionOptions = {
             readConcern: { level: 'snapshot' },
@@ -40,16 +39,43 @@ class MailRepository {
         await this.#sendEmail(mailOptions);
     }
 
-    async inviteUser(user, currentUser) {
+    async inviteUserToWorkspace(email, currentUser, workspace) {
+        // After this invitation client developer can get workspace id and send it to server for connecting workspace
         const mailOptions = {
             from: "BeeWeb",
             to: email,
             subject: "Invitation",
-            text: `Your are invited to https://beewebsystems.com/  from ${currentUser.email}`,
+            text: `Your are invited to https://beewebsystems.com/?wid=${workspace.id}  from ${currentUser.email}`, //the workspaceId can ba changed with slag too
         };
         const isSend = await this.#sendEmail(mailOptions);
-        if(!isSend) return;
-        
+        if (!isSend) return;
+        await this.dbRepository.createInvite({
+            from: currentUser._id,
+            to: email,
+            inviteType: "WORKSPACE",
+            workspace: workspace._id
+        });
+        // also we can inform user with subscription or notification
+    }
+
+    async inviteUserToConversation(userId, currentUser, conversation) {
+        const user = await this.dbRepository.getUser({ id: userId });
+        if(!user) return;
+        const mailOptions = {
+            from: "BeeWeb",
+            to: user.email,
+            subject: "Invitation",
+            text: `Your are invited to https://beewebsystems.com/?cid=${conversation.id}  from ${currentUser.email}`,
+        };
+        const isSend = await this.#sendEmail(mailOptions);
+        if (!isSend) return;
+        await this.dbRepository.createInvite({
+            from: currentUser._id,
+            to: user.email,
+            inviteType: "CONVERSATION",
+            conversation: conversation._id
+        });
+        // also we can inform user with subscription or notification
     }
 
     async checkEmailToken(email, code) {

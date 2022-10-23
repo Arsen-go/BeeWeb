@@ -1,5 +1,9 @@
 {
 	"Verification code or email are wrong.": "Verification code or email are wrong.",
 	"Invalid users": "Invalid users",
-	"Try another name": "Try another name"
+	"Try another name": "Try another name",
+	"Invalid workspace id": "Invalid workspace id",
+	"You are not invited this workspace.": "You are not invited this workspace.",
+	"Invalid conversation id": "Invalid conversation id",
+	"You are not invited to this conversation.": "You are not invited to this conversation."
 }

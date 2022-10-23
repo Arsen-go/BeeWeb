@@ -10,16 +10,13 @@ class AuthService {
         this.tokenExpiresIn = process.env.TOKEN_EXPIRES_AFTER;
     }
 
-    async checkToken(authToken) {
-        if (!authToken) throw new ApolloError("Unable to authenticate");
-
+    verifyToken(authToken) {
         try {
-            const token = authToken.replace("Bearer ", "");
-            const decoded = jsonwebtoken.verify(token, this.secret);
-            if (!token) return null;
-            return { currentUser: decoded };
+            if (!authToken) return;
+            const { currentUser } = this.#checkToken(authToken);
+            return currentUser;
         } catch (error) {
-            logger.error(`Error# ${new Date}: checkToken() \n ${error}`);
+            logger.warn(`Unable to authenticate using auth token: ${authToken}`);
         }
     }
 
@@ -36,6 +33,35 @@ class AuthService {
         } catch (error) {
             logger.error(`Error# ${new Date}: createToken() \n ${error}`);
             throw new ApolloError(error, 500);
+        }
+    }
+
+    async checkRestToken(req, res, next) {
+        try {
+            if (!req.headers.authentication) {
+                res.status(401).send({ error: "Unauthorized " });
+            }
+
+            const token = req.headers.authentication.replace("Bearer ", "");
+            const decoded = jsonwebtoken.verify(token, process.env.JWT_SECRET);
+
+            req.currentUser = decoded;
+            return next();
+        } catch (error) {
+            logger.error(`${new Date}# checkRestToken ERROR ${error}`);
+        }
+    }
+
+    #checkToken(authToken) {
+        if (!authToken) throw new ApolloError("Unable to authenticate");
+
+        try {
+            const token = authToken.replace("Bearer ", "");
+            const decoded = jsonwebtoken.verify(token, this.secret);
+            if (!token) return null;
+            return { currentUser: decoded };
+        } catch (error) {
+            logger.error(`Error# ${new Date}: checkToken() \n ${error}`);
         }
     }
 }

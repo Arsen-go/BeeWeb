@@ -41,6 +41,17 @@ class UserRepository {
                 id: createdUser.id,
                 role: "USER" // if we had a lot roles
             });
+
+            const userInvite = await this.dbRepository.getInvite({
+                // i am checking WORKSPACE type because i think unregistered user can't have invite to conversation and assign that one without having workspace 
+                type: "WORKSPACE",
+                to: user.email
+            });
+            if (userInvite) {
+                await this.dbRepository.updateWorkspace({ _id: userInvite.workspace }, { $push: { users: createdUser._id } });
+                await this.dbRepository.deleteInvite({ type: "WORKSPACE", to: user.email });
+            }
+
             return appToken;
         } catch (error) {
             logger.error(`Error ${new Date()}: createUser() \n ${error}`);

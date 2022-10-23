@@ -1,5 +1,5 @@
-const { User, EmailToken, Workspace } = require("../models");
-const { passwordGenerator, db } = require("../database/mongodb")
+const { User, EmailToken, Workspace, Invite, Conversation, Attachment } = require("../models");
+const { passwordGenerator } = require("../database/mongodb");
 const uniqid = require("uniqid");
 
 class DbRepository {
@@ -50,6 +50,10 @@ class DbRepository {
         return savedWorkspace;
     }
 
+    async updateWorkspace(findBy, updatedFields) {
+        return await Workspace.updateOne(findBy, updatedFields);
+    }
+
     async getWorkspace(findBy, selectedFields) {
         return await Workspace.findOne(findBy, selectedFields);
     }
@@ -62,6 +66,76 @@ class DbRepository {
                 return await Workspace.find(findBy, selectedFields).skip(options.skip).limit(options.limit).sort({ createdAt: options.orderBy });
             default:
                 return await Workspace.find(findBy, selectedFields).skip(options.skip).limit(options.limit);
+        }
+    }
+
+    //  #Invite# //
+    async createInvite(invite, session) {
+        invite.id = `inv_${uniqid()}`;
+        const newInvite = new Invite(invite);
+        const savedInvite = await newInvite.save({ session });
+        return savedInvite;
+    }
+
+    async getInvite(findBy, selectedFields) {
+        return await Invite.findOne(findBy, selectedFields);
+    }
+
+    async deleteInvite(findBy) {
+        await Invite.deleteOne(findBy);
+    }
+
+    // #Conversation# //
+    async createConversation(conversation, session) {
+        conversation.id = `cv_${uniqid()}`;
+        const newConversation = new Conversation(conversation);
+        const savedConversation = await newConversation.save({ session });
+        return savedConversation;
+    }
+
+    async updateConversation(findBy, updatedFields) {
+        return await Conversation.updateOne(findBy, updatedFields);
+    }
+
+    async getConversation(findBy, selectedFields) {
+        return await Conversation.findOne(findBy, selectedFields);
+    }
+
+    async getConversations(findBy, selectedFields, options) {
+        switch (options.sortBy) {
+            case "UPDATED_DATE":
+                return await Conversation.find(findBy, selectedFields).skip(options.skip).limit(options.limit).sort({ updatedAt: options.orderBy });
+            case "CREATED_DATE":
+                return await Conversation.find(findBy, selectedFields).skip(options.skip).limit(options.limit).sort({ createdAt: options.orderBy });
+            default:
+                return await Conversation.find(findBy, selectedFields).skip(options.skip).limit(options.limit);
+        }
+    }
+
+    async deleteConversation(findBy) {
+        await Conversation.deleteOne(findBy);
+    }
+
+    // #Attachment# //
+    async createAttachment(attachment, session) {
+        attachment.id = `attach_${uniqid()}`;
+        const newAttachment = new Attachment(attachment);
+        const savedAttachment = await newAttachment.save({ session });
+        return savedAttachment;
+    }
+
+    async deleteAttachment(findBy) {
+        await Attachment.deleteOne(findBy);
+    }
+
+    async getAttachments(findBy, selectedFields, options) {
+        switch (options.sortBy) {
+            case "UPDATED_DATE":
+                return await Attachment.find(findBy, selectedFields).skip(options.skip).limit(options.limit).sort({ updatedAt: options.orderBy });
+            case "CREATED_DATE":
+                return await Attachment.find(findBy, selectedFields).skip(options.skip).limit(options.limit).sort({ createdAt: options.orderBy });
+            default:
+                return await Attachment.find(findBy, selectedFields).skip(options.skip).limit(options.limit);
         }
     }
 }

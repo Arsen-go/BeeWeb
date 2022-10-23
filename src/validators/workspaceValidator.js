@@ -50,6 +50,22 @@ class WorkspaceValidator extends Validator {
             throw new ApolloError(error);
         }
     }
+
+    async validateAcceptWorkspaceInvite(requestBody) {
+        try {
+            const schema = yup.object().shape({
+                workspaceId: yup.string().test("testWid", translate("Invalid workspace id", "US"), function (id) {
+                    if (id.substring(0, 3) !== "ws_" || id.length < 10) {
+                        return false;
+                    }
+                    return true;
+                }),
+            });
+            await this.validateYupSchema(schema, requestBody);
+        } catch (error) {
+            throw new ApolloError(error);
+        }
+    }
 };
 
 module.exports = WorkspaceValidator;

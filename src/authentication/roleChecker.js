@@ -7,7 +7,7 @@ class Authentication {
     if (!currentUser) {
       throw new Error("Unauthenticated!", 401);
     }
-    logger.info(`API CALL# ${currentUser.role} #${new Date()}# ${info.fieldName}`)
+    logger.info(`API CALL# ${currentUser.role} #${new Date()}# ${info.fieldName}`);
 
     if (!roles) {
       return next(root, args, context, info);
