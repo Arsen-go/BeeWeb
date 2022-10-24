@@ -14,6 +14,12 @@ class Mutations {
                 return await conversationRepository.createConversation(requestBody, currentUser);
             }),
 
+        inviteUserToConversation: authentication.roleAuthentication(["USER"],
+            async (_, requestBody, { currentUser }) => {
+                await conversationValidator.validateInviteUserToConversation(requestBody);
+                return await conversationRepository.inviteUserToConversation(requestBody, currentUser);
+            }),
+
         acceptConversationInvite: authentication.roleAuthentication(["USER"],
             async (_, requestBody, { currentUser }) => {
                 await conversationValidator.validateAcceptConversationInvite(requestBody);

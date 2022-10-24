@@ -4,7 +4,7 @@ const yup = require('yup');
 
 class UserValidator extends Validator {
     constructor(dbRepository) {
-        super()
+        super();
         this.dbRepository = dbRepository;
     }
 
@@ -64,6 +64,17 @@ class UserValidator extends Validator {
                 skip: yup.number(),
             });
             await this.validateYupSchema(schema, { limit, skip });
+        } catch (error) {
+            throw new ApolloError(error, 406);
+        }
+    }
+
+    async validateRefreshToken(requestBody) {
+        try {
+            const schema = yup.object().shape({
+                refreshToken: yup.string().required(),
+            });
+            await this.validateYupSchema(schema, requestBody);
         } catch (error) {
             throw new ApolloError(error, 406);
         }

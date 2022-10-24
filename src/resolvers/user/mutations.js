@@ -28,6 +28,12 @@ class Mutations {
                 await userValidator.validateLogin(requestBody);
                 return await userRepository.login(requestBody);
             },
+
+        refreshToken:
+            async (_, requestBody) => {
+                await userValidator.validateRefreshToken(requestBody);
+                return await userRepository.refreshToken(requestBody);
+            },
     };
 }
 

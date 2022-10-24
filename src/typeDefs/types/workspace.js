@@ -5,13 +5,12 @@ const { gql } = require('apollo-server');
 const workspace = gql`
     type Workspace {
         id: String!
-        #owner: User!
+        owner: User!
         name: String
-        createdDate: Date
-        #invites: [Invite]
-        #allInvites: [Invite]
+        createdAt: Date
+        invites: [Invite]
         users: [User]
-        #files: [Attachment]
+        files: [Attachment]
     }
 `;
 

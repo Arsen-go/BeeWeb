@@ -3,11 +3,12 @@ const { translate } = require("../locales");
 const { logger } = require("../logger");
 
 class ConversationRepository {
-    constructor(dbRepository, mailRepository) {
+    constructor(dbRepository, mailRepository, pubsub) {
         this.dbRepository = dbRepository;
         this.mailRepository = mailRepository;
         // eslint-disable-next-line no-undef
         this.defaultLanguage = process.env.DEFAULT_LANGUAGE;
+        this.pubsub = pubsub;
     }
 
     async createConversation(requestBody, currentUser) {
@@ -36,6 +37,37 @@ class ConversationRepository {
         }
     }
 
+    async inviteUserToConversation(requestBody, currentUser) {
+        const { conversationId, userId } = requestBody;
+        try {
+            const user = await this.dbRepository.getUser({ id: currentUser.id });
+            const conversation = await this.dbRepository.getConversation({ id: conversationId });
+            if (!conversation) throw translate("Conversation is not exist.", "US");
+            const inviteTo = await this.dbRepository.getUser({ id: userId });
+            if (!inviteTo) throw translate("User is not found.", "US");
+
+            // if user invited to the conversation without being in the workspace member.
+            const workspace = await this.dbRepository.getWorkspace({ _id: conversation.workspace });
+            if (!workspace) throw translate("This conversation is not valid.", "US");
+            await this.dbRepository.updateWorkspace({ _id: workspace._id }, { $push: { users: inviteTo._id } });
+
+            const invite = await this.dbRepository.createInvite({
+                from: user._id,
+                to: inviteTo.email,
+                inviteType: "CONVERSATION",
+                conversation: conversation._id
+            });
+
+            this.#inviteUsersToConversation([userId], user, conversation);
+            this.pubsub.publish("invitationListener", { invitationListener: invite, user: inviteTo });
+
+            return "";
+        } catch (error) {
+            logger.error(`Error# ${new Date()}: inviteUserToWorkspace() \n ${error}`);
+            throw new ApolloError(error);
+        }
+    }
+
     async acceptConversationInvite(requestBody, currentUser) {
         const { conversationId } = requestBody;
 
@@ -49,6 +81,19 @@ class ConversationRepository {
             return conversation;
         } catch (error) {
             logger.error(`Error# ${new Date()}: acceptConversationInvite() \n ${error}`);
+            throw new ApolloError(error);
+        }
+    }
+
+    async userConversations(requestBody, currentUser) {
+        const { filter } = requestBody;
+        try {
+            const user = await this.dbRepository.getUser({ id: currentUser.id }, { _id: 1 });
+            return await this.dbRepository.getConversations({
+                $or: [{ owner: user._id }, { users: user._id }]
+            }, {}, filter);
+        } catch (error) {
+            logger.error(`Error# ${new Date()}: userConversations() \n ${error}`);
             throw new ApolloError(error);
         }
     }

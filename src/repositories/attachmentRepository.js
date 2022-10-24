@@ -16,7 +16,8 @@ class AttachmentRepository {
             const attachment = await dbRepository.createAttachment({
                 contentType: file.mimetype,
                 attachmentType: "WORKSPACE",
-                owner: user._id
+                owner: user._id,
+                path: file.path
             });
             const workspace = await dbRepository.getWorkspace({
                 $or: [{ owner: user._id }, { users: user._id }]
@@ -39,7 +40,8 @@ class AttachmentRepository {
             const attachment = await dbRepository.createAttachment({
                 contentType: file.mimetype,
                 attachmentType: "CONVERSATION",
-                owner: user._id
+                owner: user._id,
+                path: file.path
             });
 
             const conversation = await dbRepository.getConversation({

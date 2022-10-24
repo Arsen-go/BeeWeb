@@ -13,6 +13,8 @@ const depthLimit = require('graphql-depth-limit');
 const cors = require('cors');
 const multer = require("multer");
 const path = require("path");
+const { SubscriptionServer } = require('subscriptions-transport-ws');
+const { execute, subscribe } = require('graphql');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -38,17 +40,37 @@ const upload = multer({ storage: storage });
         resolvers,
     });
 
+    const subscriptionServer = SubscriptionServer.create({
+        schema,
+        execute,
+        subscribe,
+        keepAlive: 1000,
+        onConnect: async (authParam) => {
+            const currentUser = await authService.verifyToken(authParam.authentication);
+
+            return { currentUser };
+        },
+    }, {
+        server: httpServer,
+        path: '/graphql',
+    });
+
     const server = new ApolloServer({
         schema,
         validationRules: [depthLimit(3)],
         context: async ({ req }) => {
             const currentUser = authService.verifyToken(req ? req.headers.authentication : null);
-
-            return {
-                currentUser,
-            };
+            return { currentUser };
         },
-        plugins: [ApolloServerPluginLandingPageGraphQLPlayground],
+        plugins: [{
+            async serverWillStart() {
+                return {
+                    async drainServer() {
+                        subscriptionServer.close();
+                    }
+                };
+            }
+        }, ApolloServerPluginLandingPageGraphQLPlayground],
     });
     await server.start();
     server.applyMiddleware({ app });
@@ -57,6 +79,6 @@ const upload = multer({ storage: storage });
     // eslint-disable-next-line no-undef
     const PORT = process.env.PORT;
     httpServer.listen(PORT, () =>
-        console.log(`Server is now running on http://localhost:${PORT}/graphql`)
+        console.log(`Server is running on http://localhost:${PORT}/graphql`)
     );
 })();

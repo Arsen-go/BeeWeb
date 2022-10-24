@@ -23,12 +23,12 @@ class WorkspaceValidator extends Validator {
                     let invalids = [];
                     for (const i in emails) {
                         if (!emails[i] || !emails[i].length) {
-                            invalids.push(i)
+                            invalids.push(i);
                         }
                     }
                     if (invalids.length) return this.createError({
                         message: `Invalid's indexes ${invalids}`
-                    })
+                    });
                     return true;
                 })
             });
@@ -36,10 +36,10 @@ class WorkspaceValidator extends Validator {
         } catch (error) {
             throw new ApolloError(error);
         }
-    };
+    }
 
-    async validateWorkspaceFilter(requestBody) {
-        const { filter } = requestBody
+    async validateFilter(requestBody) {
+        const { filter } = requestBody;
         try {
             const schema = yup.object().shape({
                 limit: yup.number().min(1).max(20),
@@ -66,6 +66,23 @@ class WorkspaceValidator extends Validator {
             throw new ApolloError(error);
         }
     }
-};
+
+    async validateInviteUserToWorkspace(requestBody) {
+        try {
+            const schema = yup.object().shape({
+                workspaceId: yup.string().test("testWid", translate("Invalid workspace id", "US"), function (id) {
+                    if (id.substring(0, 3) !== "ws_" || id.length < 10) {
+                        return false;
+                    }
+                    return true;
+                }),
+                emailAddress: yup.string().email().required()
+            });
+            await this.validateYupSchema(schema, requestBody);
+        } catch (error) {
+            throw new ApolloError(error);
+        }
+    }
+}
 
 module.exports = WorkspaceValidator;

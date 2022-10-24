@@ -15,6 +15,9 @@ const AttachmentSchema = new Schema({
     enum: ["PROFILE", "WORKSPACE", "CONVERSATION", "LOGO"]
     // and any other type that application can have
   },
+  path: {
+    type: String
+  },
   owner: { type: Schema.Types.ObjectId, ref: "User" },
 }, { timestamps: true });
 

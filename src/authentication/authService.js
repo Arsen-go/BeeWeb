@@ -7,7 +7,8 @@ const { logger } = require('../logger');
 class AuthService {
     constructor() {
         this.secret = process.env.JWT_SECRET;
-        this.tokenExpiresIn = process.env.TOKEN_EXPIRES_AFTER;
+        this.tokenExpiresIn = process.env.TOKEN_EXPIRES_AFTER ? process.env.TOKEN_EXPIRES_AFTER : "1y";
+        this.refreshTokenExpiresAfter = process.env.REFRESH_TOKEN_EXPIRES_AFTER ? process.env.REFRESH_TOKEN_EXPIRES_AFTER : "2y";
     }
 
     verifyToken(authToken) {
@@ -22,14 +23,19 @@ class AuthService {
 
     async createToken(data) {
         try {
-            const expiresIn = this.tokenExpiresIn ? this.tokenExpiresIn : "1y";
+            const expiresIn = this.tokenExpiresIn;
+            const refreshTokenExpiresAfter = this.refreshTokenExpiresAfter;
             const authToken = jsonwebtoken.sign(
                 data,
                 this.secret,
                 { expiresIn }
             );
+            const refreshToken = jsonwebtoken.sign(
+                data,
+                process.env.JWT_SECRET,
+                { expiresIn: this.refreshTokenExpiresAfter });
 
-            return { authToken, expiresIn };
+            return { authToken, expiresIn, refreshToken, refreshTokenExpiresAfter };
         } catch (error) {
             logger.error(`Error# ${new Date}: createToken() \n ${error}`);
             throw new ApolloError(error, 500);
@@ -50,6 +56,22 @@ class AuthService {
         } catch (error) {
             logger.error(`${new Date}# checkRestToken ERROR ${error}`);
         }
+    }
+
+    async refreshToken(refreshToken) {
+        const decoded = jsonwebtoken.verify(refreshToken, process.env.JWT_SECRET);
+
+        const authToken = jsonwebtoken.sign({ ...decoded, metadata: "authtoken" }, process.env.JWT_SECRET);
+        const updatedRefreshToken = jsonwebtoken.sign(
+            {...decoded},
+            process.env.JWT_SECRET,
+        );
+        return {
+            authToken,
+            tokenExpiresAfter: this.tokenExpiresIn,
+            refreshToken: updatedRefreshToken,
+            refreshTokenExpiresAfter: this.refreshTokenExpiresAfter
+        };
     }
 
     #checkToken(authToken) {

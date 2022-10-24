@@ -11,7 +11,7 @@ const ConversationSchema = new Schema({
     type: String,
     required: true
   },
-  attachment: { type: Schema.Types.ObjectId, ref: 'Attachment' },
+  files: [{ type: Schema.Types.ObjectId, ref: 'Attachment' }],
   workspace: { type: Schema.Types.ObjectId, ref: 'Workspace', required: true },
   users: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },

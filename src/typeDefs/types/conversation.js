@@ -3,9 +3,13 @@ const { gql } = require("apollo-server");
 const conversation = gql`
   type Conversation {
     id: String!
-    name: Int!
-    # users: String!
-    # workspace: Int!
+    name: String
+    owner: User
+    files: [Attachment]
+    users: [User]
+    workspace: Workspace
+    invites: [Invite]
+    createdAt: Date
   }
 `;
 

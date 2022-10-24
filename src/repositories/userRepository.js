@@ -61,19 +61,21 @@ class UserRepository {
 
     async login(requestBody) {
         const { email, password } = requestBody;
+        
         try {
             const user = await this.dbRepository.getUser({ email }, { password: 1, salt: 1, id: 1 });
             if (!user) throw new ApolloError(translate(`Sorry, this user doesn't exist.`, `${this.defaultLanguage}`), 403);
             const isTruePassword = await this.dbRepository.comparePassword(user.password, user.salt, password);
             if (!isTruePassword) throw new ApolloError(translate("Wrong password.", `${this.defaultLanguage}`), 403);
-            const { authToken, tokenExpiresAfter } = await this.authService.createToken({
+            const token = await this.authService.createToken({
                 email, id: user.id, role: "USER"
             });
-            return { authToken, tokenExpiresAfter };
+
+            return token;
         } catch (error) {
             logger.error(`Error ${new Date()}: login() \n ${error}`);
             throw new ApolloError(error);
-        }
+        } 
     }
 
     async me(currentUser) {
@@ -91,6 +93,16 @@ class UserRepository {
             return await this.dbRepository.getUsers({}, {}, { limit, skip });
         } catch (error) {
             throw new ApolloError(error, 500);
+        }
+    }
+
+    async refreshToken(requestBody) {
+        const { refreshToken } = requestBody;
+        try {
+            return await this.authService.refreshToken(refreshToken);
+        } catch (error) {
+            logger.error(`Error# ${new Date()}: me() \n ${error}`);
+            throw new ApolloError(error);
         }
     }
 }

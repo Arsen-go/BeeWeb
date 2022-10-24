@@ -5,5 +5,6 @@
 	"Invalid workspace id": "Invalid workspace id",
 	"You are not invited this workspace.": "You are not invited this workspace.",
 	"Invalid conversation id": "Invalid conversation id",
-	"You are not invited to this conversation.": "You are not invited to this conversation."
+	"You are not invited to this conversation.": "You are not invited to this conversation.",
+	"Conversation is not exist.": "Conversation is not exist."
 }

@@ -81,6 +81,17 @@ class DbRepository {
         return await Invite.findOne(findBy, selectedFields);
     }
 
+    async getInvites(findBy, selectedFields, options) {
+        switch (options.sortBy) {
+            case "UPDATED_DATE":
+                return await Invite.find(findBy, selectedFields).skip(options.skip).limit(options.limit).sort({ updatedAt: options.orderBy });
+            case "CREATED_DATE":
+                return await Invite.find(findBy, selectedFields).skip(options.skip).limit(options.limit).sort({ createdAt: options.orderBy });
+            default:
+                return await Invite.find(findBy, selectedFields).skip(options.skip).limit(options.limit);
+        }
+    }
+
     async deleteInvite(findBy) {
         await Invite.deleteOne(findBy);
     }

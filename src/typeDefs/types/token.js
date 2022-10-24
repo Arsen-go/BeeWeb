@@ -2,10 +2,10 @@ const { gql } = require("apollo-server");
 
 const token = gql`
   type Token {
-    authToken: String!
-    expiresIn: Int!
-    # refreshToken: String!
-    # refreshTokenExpiresAfter: Int!
+    authToken: String
+    expiresIn: String
+    refreshToken: String
+    refreshTokenExpiresAfter: String
   }
 `;
 

@@ -60,7 +60,7 @@ class MailRepository {
 
     async inviteUserToConversation(userId, currentUser, conversation) {
         const user = await this.dbRepository.getUser({ id: userId });
-        if(!user) return;
+        if (!user) return;
         const mailOptions = {
             from: "BeeWeb",
             to: user.email,
@@ -69,6 +69,8 @@ class MailRepository {
         };
         const isSend = await this.#sendEmail(mailOptions);
         if (!isSend) return;
+        const isInvited = await this.dbRepository.getInvite({ to: user.email });
+        if (isInvited) return;
         await this.dbRepository.createInvite({
             from: currentUser._id,
             to: user.email,

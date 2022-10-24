@@ -24,6 +24,8 @@ const userQueries = gql`
         """Step 3: Register a new user and get application token."""
         createUser (user: UserInput!): Token
         login (email: String!, password: String!): Token
+
+        refreshToken (refreshToken: String!): Token
     }
   
 `;

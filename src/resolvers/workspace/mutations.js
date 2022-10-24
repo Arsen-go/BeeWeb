@@ -14,12 +14,18 @@ class Mutations {
                 return await workspaceRepository.createWorkspace(requestBody, currentUser);
             }),
 
+        inviteUserToWorkspace: authentication.roleAuthentication(["USER"],
+            async (_, requestBody, { currentUser }) => {
+                await workspaceValidator.validateInviteUserToWorkspace(requestBody);
+                return await workspaceRepository.inviteUserToWorkspace(requestBody, currentUser);
+            }),
+
         acceptWorkspaceInvite: authentication.roleAuthentication(["USER"],
             async (_, requestBody, { currentUser }) => {
                 await workspaceValidator.validateAcceptWorkspaceInvite(requestBody);
                 return await workspaceRepository.acceptWorkspaceInvite(requestBody, currentUser);
             }),
-    }
+    };
 }
 
 module.exports = { Mutations };
