@@ -103,6 +103,22 @@ CREATE TABLE "workspaceUser" (
  	  REFERENCES "user"(_id)
 )</th>
     </tr>
+        <tr>
+        <th scope="col">conversationUser</th>
+        <th>
+ CREATE TABLE "conversationUser" (
+ 	_id SERIAL PRIMARY KEY,
+ 	conversationId Int,
+ 	userId Int,
+ 	created_at TIMESTAMP DEFAULT NOW(),
+ 	CONSTRAINT user_cv
+      FOREIGN KEY(conversationId) 
+  	  REFERENCES "conversation"(_id),
+     CONSTRAINT cv_user
+      FOREIGN KEY(userId) 
+  	  REFERENCES "user"(_id)
+)</th>
+    </tr>
     <tr>
         <th scope="col">attachment</th>
         <th>CREATE TABLE "attachment" (
