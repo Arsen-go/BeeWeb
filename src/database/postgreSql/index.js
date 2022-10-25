@@ -1,24 +1,25 @@
-const { Client } = require("pg")
-const dotenv = require("dotenv")
-dotenv.config()
- 
-const connectDb = async () => {
+/* eslint-disable no-undef */
+const { Pool } = require("pg");
+const dotenv = require("dotenv");
+dotenv.config();
+
+let pool;
+(async function connect() {
     try {
-        const client = new Client({
-            user: process.env.PGUSER,
-            host: process.env.PGHOST,
-            database: process.env.PGDATABASE,
-            password: process.env.PGPASSWORD,
-            port: process.env.PGPORT
-        })
- 
-        await client.connect()
-        const res = await client.query('SELECT * FROM some_table')
-        console.log(res)
-        await client.end()
+        pool = new Pool({
+            user: "postgres",
+            host: process.env.PG_HOST,
+            database: process.env.PG_DATABASE,
+            password: "ars022074",
+            port: process.env.PG_PORT,
+        });
+
+        await pool.connect();
+        console.log("Connected to Postgres Database");
+        return { pool };
     } catch (error) {
-        console.log(error)
+        console.log(error);
     }
-}
- 
-connectDb()
+})();
+
+module.exports = { pool };

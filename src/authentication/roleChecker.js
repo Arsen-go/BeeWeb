@@ -1,5 +1,5 @@
 const { logger } = require("../logger");
-const { User } = require("../models");
+const { dbRepository } = require("../repositories");
 
 class Authentication {
   roleAuthentication = (roles, next) => async (root, args, context, info) => {
@@ -15,7 +15,7 @@ class Authentication {
 
     let role;
     if (currentUser) {
-      const user = await User.findOne({ id: currentUser.id }, { _id: 1 });
+      const user = await dbRepository.getUser({ id: currentUser.id }, { _id: 1 });
       if (!user) {
         logger.info(`#${new Date()}# ${currentUser} is not exist in db.`);
         throw new Error(`Token user is not exist.`, 500);

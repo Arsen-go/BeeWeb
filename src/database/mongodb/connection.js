@@ -3,7 +3,14 @@ require("dotenv").config();
 const db = require("mongoose");
 const { logger } = require("../../logger");
 
-const connectionPath = `mongodb://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
+
+let connectionPath = `mongodb://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
+// If you want to test api's with unit tests or use another one
+if(process.env.DB_IS_TEST) {
+  // DB_HOST DB_PORT and DB_NAME must chang
+  connectionPath = `mongodb://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
+}
+
 
 db.connection.on("connected", () => {
   logger.info("DB is connected.");
@@ -19,7 +26,7 @@ db.connection.on("disconnected", () => {
 
 const gracefulExit = () => {
   db.connection.close(() => {
-    logger.info(`Node process ends: DB connection is closed.`)
+    logger.info(`Node process ends: DB connection is closed.`);
     process.exit(0);
   });
 };

@@ -1,5 +1,5 @@
-const { User, EmailToken, Workspace, Invite, Conversation, Attachment } = require("../models");
-const { passwordGenerator } = require("../database/mongodb");
+const { User, EmailToken, Workspace, Invite, Conversation, Attachment } = require("../../models");
+const { passwordGenerator } = require("../../database/mongodb");
 const uniqid = require("uniqid");
 
 class DbRepository {
@@ -33,8 +33,8 @@ class DbRepository {
         return await User.findOne(findBy, selectedFields);
     }
 
-    async comparePassword(password, salt, inputPassword) {
-        if (!passwordGenerator.compare(password, salt, inputPassword)) return false;
+    async comparePassword(user, inputPassword) {
+        if (!passwordGenerator.compare(user.password, user.salt, inputPassword)) return false;
         return true;
     }
 
@@ -50,8 +50,8 @@ class DbRepository {
         return savedWorkspace;
     }
 
-    async updateWorkspace(findBy, updatedFields) {
-        return await Workspace.updateOne(findBy, updatedFields);
+    async updateWorkspace(findBy, updatedFields, session) {
+        return await Workspace.updateOne(findBy, updatedFields, { session });
     }
 
     async getWorkspace(findBy, selectedFields) {
@@ -92,8 +92,8 @@ class DbRepository {
         }
     }
 
-    async deleteInvite(findBy) {
-        await Invite.deleteOne(findBy);
+    async deleteInvite(findBy, session) {
+        await Invite.deleteOne(findBy, { session });
     }
 
     // #Conversation# //
@@ -104,8 +104,8 @@ class DbRepository {
         return savedConversation;
     }
 
-    async updateConversation(findBy, updatedFields) {
-        return await Conversation.updateOne(findBy, updatedFields);
+    async updateConversation(findBy, updatedFields, session) {
+        return await Conversation.updateOne(findBy, updatedFields, { session });
     }
 
     async getConversation(findBy, selectedFields) {

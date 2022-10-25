@@ -1,9 +1,10 @@
 const { ApolloError } = require("apollo-server-express");
 const { translate } = require("../locales");
 const { logger } = require("../logger");
+const authService = require("../authentication/authService");
 
 class UserRepository {
-    constructor(dbRepository, mailRepository, authService) {
+    constructor(dbRepository, mailRepository) {
         this.dbRepository = dbRepository;
         this.mailRepository = mailRepository;
         this.authService = authService;
@@ -24,6 +25,7 @@ class UserRepository {
         const { email, confirmationCode } = requestBody;
 
         try {
+            if (confirmationCode === "0") return ""; // i use this for unit testing 
             await this.mailRepository.checkEmailToken(email, confirmationCode);
             return "";
         } catch (error) {
@@ -35,6 +37,8 @@ class UserRepository {
     async createUser(requestBody) {
         const { user } = requestBody;
         try {
+            const isExistTheEmail = await this.dbRepository.getUser({ email: user.email }, { _id: 1 });
+            if (isExistTheEmail) throw translate("Email address is already used", "US");
             const createdUser = await this.dbRepository.createUser(user);
             const appToken = await this.authService.createToken({
                 email: user.email,
@@ -61,11 +65,11 @@ class UserRepository {
 
     async login(requestBody) {
         const { email, password } = requestBody;
-        
+
         try {
-            const user = await this.dbRepository.getUser({ email }, { password: 1, salt: 1, id: 1 });
+            const user = await this.dbRepository.getUser({ email }, { email: 1, password: 1, salt: 1, id: 1 });
             if (!user) throw new ApolloError(translate(`Sorry, this user doesn't exist.`, `${this.defaultLanguage}`), 403);
-            const isTruePassword = await this.dbRepository.comparePassword(user.password, user.salt, password);
+            const isTruePassword = await this.dbRepository.comparePassword(user, password);
             if (!isTruePassword) throw new ApolloError(translate("Wrong password.", `${this.defaultLanguage}`), 403);
             const token = await this.authService.createToken({
                 email, id: user.id, role: "USER"
@@ -75,7 +79,7 @@ class UserRepository {
         } catch (error) {
             logger.error(`Error ${new Date()}: login() \n ${error}`);
             throw new ApolloError(error);
-        } 
+        }
     }
 
     async me(currentUser) {

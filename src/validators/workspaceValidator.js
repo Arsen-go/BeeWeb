@@ -55,7 +55,7 @@ class WorkspaceValidator extends Validator {
         try {
             const schema = yup.object().shape({
                 workspaceId: yup.string().test("testWid", translate("Invalid workspace id", "US"), function (id) {
-                    if (id.substring(0, 3) !== "ws_" || id.length < 10) {
+                    if (id.substring(0, 3) !== "ws_" || id.substring(0, 6) !== "pg_ws_" || id.length < 10) {
                         return false;
                     }
                     return true;
@@ -71,7 +71,7 @@ class WorkspaceValidator extends Validator {
         try {
             const schema = yup.object().shape({
                 workspaceId: yup.string().test("testWid", translate("Invalid workspace id", "US"), function (id) {
-                    if (id.substring(0, 3) !== "ws_" || id.length < 10) {
+                    if (id.substring(0, 3) !== "ws_" || id.substring(0, 6) !== "pg_ws_" || id.length < 10) {
                         return false;
                     }
                     return true;

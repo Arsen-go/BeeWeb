@@ -35,7 +35,7 @@ class PasswordGenerator {
         if (passwordData.hashedPassword === hashedPassword) {
             return true;
         }
-        return false
+        return false;
     };
 
     #createHash = (password, salt) => {

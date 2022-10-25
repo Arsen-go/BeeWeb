@@ -47,15 +47,7 @@ class MailRepository {
             subject: "Invitation",
             text: `Your are invited to https://beewebsystems.com/?wid=${workspace.id}  from ${currentUser.email}`, //the workspaceId can ba changed with slag too
         };
-        const isSend = await this.#sendEmail(mailOptions);
-        if (!isSend) return;
-        await this.dbRepository.createInvite({
-            from: currentUser._id,
-            to: email,
-            inviteType: "WORKSPACE",
-            workspace: workspace._id
-        });
-        // also we can inform user with subscription or notification
+        return await this.#sendEmail(mailOptions);
     }
 
     async inviteUserToConversation(userId, currentUser, conversation) {
@@ -67,23 +59,13 @@ class MailRepository {
             subject: "Invitation",
             text: `Your are invited to https://beewebsystems.com/?cid=${conversation.id}  from ${currentUser.email}`,
         };
-        const isSend = await this.#sendEmail(mailOptions);
-        if (!isSend) return;
-        const isInvited = await this.dbRepository.getInvite({ to: user.email });
-        if (isInvited) return;
-        await this.dbRepository.createInvite({
-            from: currentUser._id,
-            to: user.email,
-            inviteType: "CONVERSATION",
-            conversation: conversation._id
-        });
-        // also we can inform user with subscription or notification
+        return await this.#sendEmail(mailOptions);
     }
 
     async checkEmailToken(email, code) {
         const emailToken = await this.dbRepository.getEmailToken({ email, code });
         if (!emailToken) throw new ApolloError(translate("Verification code or email are wrong.", `${this.defaultLanguage}`));
-        await this.dbRepository.deleteEmailToken({ _id: emailToken._id });
+        await this.dbRepository.deleteEmailToken({ email, code });
         return true;
     }
 

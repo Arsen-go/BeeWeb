@@ -1,4 +1,5 @@
 const { ApolloError } = require("apollo-server-express");
+const { db } = require("../database/mongodb"); // if database is selected postgresql we will do transaction with that but now i can't deliver that (կարճ ասած չեմ հասցնի -_-;d)  
 const { translate } = require("../locales");
 const { logger } = require("../logger");
 
@@ -9,11 +10,19 @@ class ConversationRepository {
         // eslint-disable-next-line no-undef
         this.defaultLanguage = process.env.DEFAULT_LANGUAGE;
         this.pubsub = pubsub;
+        this.transactionOptions = {
+            readPreference: 'primary',
+            readConcern: { level: 'local' },
+            writeConcern: { w: 'majority' }
+        };
     }
 
     async createConversation(requestBody, currentUser) {
         const { conversation } = requestBody;
+        const session = await db.startSession();
+
         try {
+            session.startTransaction(this.transactionOptions);
             const { name, workspaceId, userIds } = conversation;
             const user = await this.dbRepository.getUser({ id: currentUser.id });
 
@@ -24,22 +33,31 @@ class ConversationRepository {
                 owner: user._id,
                 name,
                 workspace: workspace._id
-            });
+            }, session);
 
             if (userIds && userIds.length) {
                 this.#inviteUsersToConversation(userIds, user, createdConversation);
             }
 
+            await session.commitTransaction();
+
             return createdConversation;
         } catch (error) {
             logger.error(`Error ${new Date()}: createConversation() \n ${error}`);
+            await session.abortTransaction();
             throw new ApolloError(error);
+        } finally {
+            await session.endSession();
         }
     }
 
     async inviteUserToConversation(requestBody, currentUser) {
         const { conversationId, userId } = requestBody;
+        const session = await db.startSession();
+
         try {
+            session.startTransaction(this.transactionOptions);
+
             const user = await this.dbRepository.getUser({ id: currentUser.id });
             const conversation = await this.dbRepository.getConversation({ id: conversationId });
             if (!conversation) throw translate("Conversation is not exist.", "US");
@@ -49,39 +67,55 @@ class ConversationRepository {
             // if user invited to the conversation without being in the workspace member.
             const workspace = await this.dbRepository.getWorkspace({ _id: conversation.workspace });
             if (!workspace) throw translate("This conversation is not valid.", "US");
-            await this.dbRepository.updateWorkspace({ _id: workspace._id }, { $push: { users: inviteTo._id } });
+            await this.dbRepository.updateWorkspace({ _id: workspace._id }, { $push: { users: inviteTo._id } }, session);
 
-            const invite = await this.dbRepository.createInvite({
-                from: user._id,
-                to: inviteTo.email,
-                inviteType: "CONVERSATION",
-                conversation: conversation._id
-            });
+            const isSend = await this.mailRepository.inviteUserToConversation(userId, user, conversation);
+            const isInvited = await this.dbRepository.getInvite({ to: inviteTo.email });
 
-            this.#inviteUsersToConversation([userId], user, conversation);
+            let invite = {};
+            if (isSend && !isInvited) {
+                invite = await this.dbRepository.createInvite({
+                    from: user._id,
+                    to: inviteTo.email,
+                    inviteType: "CONVERSATION",
+                    conversation: conversation._id
+                }, session);
+            }
+
             this.pubsub.publish("invitationListener", { invitationListener: invite, user: inviteTo });
 
+            await session.commitTransaction();
             return "";
         } catch (error) {
             logger.error(`Error# ${new Date()}: inviteUserToWorkspace() \n ${error}`);
+            await session.abortTransaction();
             throw new ApolloError(error);
+        } finally {
+            await session.endSession();
         }
     }
 
     async acceptConversationInvite(requestBody, currentUser) {
         const { conversationId } = requestBody;
+        const session = await db.startSession();
 
         try {
+            session.startTransaction(this.transactionOptions);
             const user = await this.dbRepository.getUser({ id: currentUser.id });
             const conversation = await this.dbRepository.getConversation({ id: conversationId });
             const invite = await this.dbRepository.getInvite({ to: currentUser.email, conversation: conversation._id }, { conversation: 1, _id: 1 });
             if (!invite) throw translate("You are not invited to this conversation.", this.defaultLanguage);
-            await this.dbRepository.updateConversation({ _id: invite.conversation }, { $push: { users: user._id } });
-            await this.dbRepository.deleteInvite({ conversation: conversation._id, to: user.email });
+            await this.dbRepository.updateConversation({ _id: invite.conversation }, { $push: { users: user._id } }, session);
+            await this.dbRepository.deleteInvite({ conversation: conversation._id, to: user.email }, session);
+            await session.commitTransaction();
+
             return conversation;
         } catch (error) {
             logger.error(`Error# ${new Date()}: acceptConversationInvite() \n ${error}`);
+            await session.abortTransaction();
             throw new ApolloError(error);
+        } finally {
+            await session.endSession();
         }
     }
 
@@ -98,10 +132,21 @@ class ConversationRepository {
         }
     }
 
-    #inviteUsersToConversation(userIds, currentUser, conversation) {
+    async #inviteUsersToConversation(userIds, currentUser, conversation) {
         try {
             for (const id of userIds) {
-                this.mailRepository.inviteUserToConversation(id, currentUser, conversation);
+                const isSend = await this.mailRepository.inviteUserToConversation(id, currentUser, conversation);
+                if (isSend) {
+                    const isInvited = await this.dbRepository.getInvite({ to: currentUser.email });
+                    if (!isInvited) {
+                        await this.dbRepository.createInvite({
+                            from: currentUser._id,
+                            to: currentUser.email,
+                            inviteType: "CONVERSATION",
+                            conversation: conversation._id
+                        });
+                    }
+                }
             }
         } catch (error) {
             logger.error(`Error# ${new Date()}: inviteUsersToConversation() failed \n ${error}`);

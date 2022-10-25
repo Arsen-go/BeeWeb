@@ -1,5 +1,5 @@
 require('dotenv').config();
-require('./database/mongodb');
+require('./database');
 const { ApolloServer } = require('apollo-server-express');
 const { ApolloServerPluginLandingPageGraphQLPlayground } = require("apollo-server-core");
 const { typeDefs } = require('./typeDefs');

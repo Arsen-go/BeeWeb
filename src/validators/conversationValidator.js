@@ -27,7 +27,7 @@ class WorkspaceValidator extends Validator {
                     return true;
                 }),
                 workspaceId: yup.string().required().test("testUsersArray", translate("Invalid workspace id", "US"), function (id) {
-                    if (id.substring(0, 3) !== "ws_" || id.length < 10) {
+                    if ((id.substring(0, 3) !== "ws_" && id.substring(0, 6) !== "pg_ws_") || id.length < 10) {
                         return false;
                     }
                     return true;
@@ -43,7 +43,7 @@ class WorkspaceValidator extends Validator {
         try {
             const schema = yup.object().shape({
                 conversationId: yup.string().test("testCid", translate("Invalid conversation id", "US"), function (id) {
-                    if (id.substring(0, 3) !== "cv_" || id.length < 10) {
+                    if (id.substring(0, 3) !== "cv_" || id.substring(0, 6) !== "pg_cv_" || id.length < 10) {
                         return false;
                     }
                     return true;
@@ -72,7 +72,7 @@ class WorkspaceValidator extends Validator {
         try {
             const schema = yup.object().shape({
                 conversationId: yup.string().test("testCid", translate("Invalid conversation id", "US"), function (id) {
-                    if (id.substring(0, 3) !== "cv_" || id.length < 10) {
+                    if (id.substring(0, 3) !== "cv_" || id.substring(0, 6) !== "pg_cv_" || id.length < 10) {
                         return false;
                     }
                     return true;
